@@ -1,7 +1,9 @@
 # Author: SecByteX | Date: 29 June 2025
 # Project: Password Strength Checker
-
+import requests as req
+import hashlib
 import re 
+
 colors = [
     "\033[31m", #red
      #"\033[32m" ,#green
@@ -86,9 +88,37 @@ def check_strength(passwd):
     return defects,point
 
 
+def check_pwned(password):
+
+    m=hashlib.sha1()
+    m.update(password.encode("UTF-8"))
+    full_sha1_pass= m.hexdigest()
+
+    first5=full_sha1_pass[:5]
+    last_from5= full_sha1_pass[5:]
+
+    url = "https://api.pwnedpasswords.com/range/" + first5
+
+    resp=req.get(url)
+    
+    Regex_Pattern = rf"(?<={last_from5.upper()+":"})\d*\b"
+    pwned_response_list=re.findall(Regex_Pattern,resp.text)
+
+    if len(pwned_response_list) == 0:
+        print("\033[32mGood news — no pwnage found!"+reset)
+    else:
+
+        print("\033[31mOh no — pwned!"+reset)
+        pwned_times="This password has been seen \033[34m"+ "{:,}".format(int(pwned_response_list[0])) +" \033[31mtimes before in data breaches!"
+        print("\033[31m"+pwned_times+reset)
+
+
+
+
 input("[INFORMATION] : CTRL + C.... for quit.\n Okay?")
 while True: 
     password = input("\033[44m Enter password:\033[0m ")
     defects,point=check_strength(password)
     print_output(o_defects=defects, point=point)
+    check_pwned(password=password)
 
