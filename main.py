@@ -17,7 +17,7 @@ def print_output(o_defects,point):
     
 
     if len(o_defects) == 0 :
-        print("\033[32mIt's secure. Take a note!\033[0m")
+        print("\033[32mGreat! Your password passed all strength checks.\033[0m")
         return 
 
     colored_defects = [
@@ -99,8 +99,15 @@ def check_pwned(password):
 
     url = "https://api.pwnedpasswords.com/range/" + first5
 
-    resp=req.get(url)
-    
+    try:
+        resp=req.get(url,timeout=5)
+    except req.ConnectionError:
+        print("\nNo internet connection...Pwnage check failed!\n")
+        return
+    except req.Timeout:
+        print("\nThe connection timed out...Pwnage check failed!\n")
+        return
+
     Regex_Pattern = rf"(?<={last_from5.upper()+":"})\d*\b"
     pwned_response_list=re.findall(Regex_Pattern,resp.text)
 
